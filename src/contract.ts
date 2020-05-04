@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import ContractInternal from "../contract-internal";
+import ContractInternal from "./contract-internal";
 
 declare type ContractCondition = (...args: any[]) => boolean;
 declare type ContractFunction = (check: boolean, message?: string) => boolean;
@@ -7,25 +7,21 @@ declare type ContractFunction = (check: boolean, message?: string) => boolean;
 
 const oldValueMetadataKey = Symbol('oldValue');
 
+export default abstract class Contract {
+  protected abstract decorate(condition: (...conditionArgs: any[]) => boolean, message?: string): boolean;
 
-export default class Contract {
   private _postCondition = 'Ensures';
   private _preCondition = 'Requires'
+  private readonly _cache;
 
-  static OldValue<T> (value: T): T {
-    console.log('this is a test')
-    console.log(value);
-    console.log(Reflect.getOwnMetadata("OldValue", Contract));
-    return value;
+  constructor () {
+    this._cache = {};
   }
 
-
-  // static OldValue (target: Object, propertyKey: string | symbol, parameterIndex: number) {
-  //   console.log(propertyKey);
-  //   let existingRequiredParameters: number[] = Reflect.getOwnMetadata(oldValueMetadataKey, target, propertyKey) || [];
-  //   existingRequiredParameters.push(parameterIndex);
-  //   Reflect.defineMetadata(oldValueMetadataKey, existingRequiredParameters, target, propertyKey);
-  // }
+  static OldValue<T> (value: T): T {
+    console.log(value);
+    return value;
+  }
 
   /**
    * Specifies a postcondition contract for the enclosing method or property.
@@ -36,9 +32,8 @@ export default class Contract {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
       descriptor.value = function (...args: any[]) {
-        const cachedValues = [...args];
         const result = original.apply(this, args);
-        ContractInternal._ensures(condition.apply(null, result), message);
+        ContractInternal._ensures(condition.apply(null, [result, this]), message);
       }
 
       return descriptor;

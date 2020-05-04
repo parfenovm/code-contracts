@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import ContractInternal from "./contract-internal";
+import ContractInternal from "../contract-internal";
 
 declare type ContractCondition = (...args: any[]) => boolean;
 declare type ContractFunction = (check: boolean, message?: string) => boolean;

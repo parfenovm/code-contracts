@@ -1,4 +1,4 @@
-import Contract from "./contract";
+import Contract from "../contract";
 
 class Func {
   private test: string;

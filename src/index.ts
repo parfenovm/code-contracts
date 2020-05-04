@@ -1,14 +1,9 @@
 import Contract from "./contract";
 
-class Func extends Contract {
+class Func {
   public test: string = "hi";
 
-  decorate (condition: (...conditionArgs: any[]) => boolean, message?: string) {
-    return condition();
-  }
-
   constructor() {
-    super();
     this.test = "hi!"
   }
 

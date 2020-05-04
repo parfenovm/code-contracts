@@ -3,13 +3,10 @@ import ContractInternal from "./contract-internal";
 
 declare type ContractCondition = (...args: any[]) => boolean;
 declare type ContractFunction = (check: boolean, message?: string) => boolean;
-// declare type DescriptorFunc = (originalFunction: any, contractCondition: ContractCondition, contractFunction: ContractFunction, message?: string) => any;
 
 const oldValueMetadataKey = Symbol('oldValue');
 
 export default abstract class Contract {
-  protected abstract decorate(condition: (...conditionArgs: any[]) => boolean, message?: string): boolean;
-
   private _postCondition = 'Ensures';
   private _preCondition = 'Requires'
   private readonly _cache;

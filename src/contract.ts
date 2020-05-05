@@ -17,7 +17,11 @@ export default abstract class Contract {
   }
 
   static getParameters (func: Function) {
-    return new RegExp('(?:'+func.name+'\\s*|^)\\s*\\((.*?)\\)').exec(func.toString().replace(/\n/g, ''))[1].replace(/\/\*.*?\*\//g, '').replace(/ /g, '').split(',');
+    return new RegExp('(?:'+func.name+'\\s*|^)\\s*\\((.*?)\\)')
+      .exec(func.toString().replace(/\n/g, ''))[1]
+      .replace(/\/\*.*?\*\//g, '')
+      .replace(/ /g, '')
+      .split(',');
   }
 
   static OldValue<T> (variableName: string, value: T): T {

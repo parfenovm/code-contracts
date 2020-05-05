@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import ContractInternal from "./contract-internal";
 
+
 declare type ContractCondition = (...args: any[]) => boolean;
 declare type ContractFunction = (check: boolean, message?: string) => boolean;
 
@@ -15,8 +16,11 @@ export default abstract class Contract {
     this._cache = {};
   }
 
-  static OldValue<T> (value: T): T {
-    console.log(value);
+  static getParameters (func: Function) {
+    return new RegExp('(?:'+func.name+'\\s*|^)\\s*\\((.*?)\\)').exec(func.toString().replace(/\n/g, ''))[1].replace(/\/\*.*?\*\//g, '').replace(/ /g, '').split(',');
+  }
+
+  static OldValue<T> (variableName: string, value: T): T {
     return value;
   }
 
@@ -28,10 +32,14 @@ export default abstract class Contract {
   static Ensures(condition: (...conditionArgs: any[]) => boolean, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
-      descriptor.value = function (...args: any[]) {
+      const getParameters = this.getParameters;
+      const descriptorCall = function (...args: any[]) {
         const result = original.apply(this, args);
+        console.log(original.toString())
+        console.log(getParameters(original))
         ContractInternal._ensures(condition.apply(null, [result, this]), message);
       }
+      descriptor.value = descriptorCall;
 
       return descriptor;
     }
@@ -40,11 +48,13 @@ export default abstract class Contract {
   static Assume(condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
-      descriptor.value = function (...args: any[]) {
+      const descriptorCall = function (...args: any[]) {
         ContractInternal._assume(condition.apply(null, args), message);
         const result = original.apply(this, args);
         return result;
       }
+
+      descriptor.value = descriptorCall;
 
       return descriptor;
     }

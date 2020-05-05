@@ -7,8 +7,8 @@ class Func {
     this.test = "hi!"
   }
 
-  @Contract.Ensures((result: string | null, instance: Func) => result !== null && Contract.OldValue<string>(instance.test) === 'hi!', 'Result should not be null')
-  test_ensures (test: string): string | null {
+  @Contract.Ensures((result: string | null, instance: Func) => result !== null && Contract.OldValue<string>('instance.test', instance.test) === 'hi!', 'Result should not be null')
+  test_ensures (test: string, q?: string): string | null {
     this.test = 'yo';
     return "hello";
   }

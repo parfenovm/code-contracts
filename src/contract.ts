@@ -24,7 +24,12 @@ export default abstract class Contract {
       .split(',');
   }
 
-  static OldValue<T> (variableName: string, value: T): T {
+  static getOldValueParameter (func: string): string | null {
+    const result = new RegExp(/OldValue\(([^)]+)\)/).exec(func);
+    return result && result[1];
+  }
+
+  static OldValue<T> (value: T): T {
     return value;
   }
 
@@ -37,10 +42,9 @@ export default abstract class Contract {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
       const getParameters = this.getParameters;
+      const getOldValue = this.getOldValueParameter;
       const descriptorCall = function (...args: any[]) {
         const result = original.apply(this, args);
-        console.log(original.toString())
-        console.log(getParameters(original))
         ContractInternal._ensures(condition.apply(null, [result, this]), message);
       }
       descriptor.value = descriptorCall;

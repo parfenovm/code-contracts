@@ -46,6 +46,10 @@ export default abstract class Contract {
       _set(Contract._cache[className][functionName], paramsName[i], values[i]);
     }
   }
+  
+  static destroyClassCache (className: string) {
+    delete Contract._cache[className];
+  }
 
   /**
    * Specifies a postcondition contract for the enclosing method or property.
@@ -58,14 +62,15 @@ export default abstract class Contract {
 
       const hasOldValueParameter = this.hasOldValueParameter(condition.toString());
       const populateCache = (...args) => this.populateCache(target.constructor.name, key, this.getParameters(condition), args);
-      const showCache = () => console.log(Contract._cache);
+      const destroyCache = () => this.destroyClassCache(target.constructor.name);
       const descriptorCall = function (...args: any[]) {
         if (hasOldValueParameter) {
           populateCache(...args, this);
         }
+
         const result = original.apply(this, args);
-        showCache()
         ContractInternal._ensures(condition.apply(null, [result, this]), message);
+        destroyCache();
       }
       descriptor.value = descriptorCall;
 

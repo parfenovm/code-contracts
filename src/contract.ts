@@ -1,5 +1,8 @@
 import "reflect-metadata";
 import ContractInternal from "./contract-internal";
+import _set from 'lodash.set';
+import _get from 'lodash.get';
+import Log from "./log";
 
 
 declare type ContractCondition = (...args: any[]) => boolean;
@@ -10,10 +13,9 @@ const oldValueMetadataKey = Symbol('oldValue');
 export default abstract class Contract {
   private _postCondition = 'Ensures';
   private _preCondition = 'Requires'
-  private readonly _cache;
+  private static _cache = {};
 
   constructor () {
-    this._cache = {};
   }
 
   static getParameters (func: Function) {
@@ -24,13 +26,25 @@ export default abstract class Contract {
       .split(',');
   }
 
-  static getOldValueParameter (func: string): string | null {
-    const result = new RegExp(/OldValue\(([^)]+)\)/).exec(func);
-    return result && result[1];
+  static hasOldValueParameter (func: string): boolean {
+    return func.indexOf('OldValue') > -1;
   }
 
-  static OldValue<T> (value: T): T {
-    return value;
+  static OldValue<T> (path: string, value: T): T {
+    const cachedValue = _get(Contract._cache, path);
+    if (!cachedValue) {
+      Log.log('Cached value has not been found, replace with passed value');
+    }
+
+    console.log('cachedValue', cachedValue)
+    return cachedValue || value;
+  }
+
+  static populateCache (className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
+    _set(Contract._cache, `${className}.${String(functionName)}`, {});
+    for (let i = 0; i < paramsName.length; i++) {
+      _set(Contract._cache[className][functionName], paramsName[i], values[i]);
+    }
   }
 
   /**
@@ -41,10 +55,16 @@ export default abstract class Contract {
   static Ensures(condition: (...conditionArgs: any[]) => boolean, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
-      const getParameters = this.getParameters;
-      const getOldValue = this.getOldValueParameter;
+
+      const hasOldValueParameter = this.hasOldValueParameter(condition.toString());
+      const populateCache = (...args) => this.populateCache(target.constructor.name, key, this.getParameters(condition), args);
+      const showCache = () => console.log(Contract._cache);
       const descriptorCall = function (...args: any[]) {
+        if (hasOldValueParameter) {
+          populateCache(...args, this);
+        }
         const result = original.apply(this, args);
+        showCache()
         ContractInternal._ensures(condition.apply(null, [result, this]), message);
       }
       descriptor.value = descriptorCall;

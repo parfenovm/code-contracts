@@ -9,7 +9,7 @@ class Func {
 
   @Contract.Ensures((result: string | null, instance: Func) =>
     result !== null
-    && Contract.OldValue<string>('Func.test_ensures.instance.test', instance.test) !== Contract.ContractResult('Func.test_ensures'),
+    && Contract.OldValue<string>(instance.test) !== Contract.ContractResult('Func.test_ensures'),
     'Result should not be null'
   )
   test_ensures (test: string, q?: string): string | null {

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import ContractInternal from "./contract-internal";
 import _set from 'lodash.set';
 import _get from 'lodash.get';
+import _clone from 'lodash.clone';
 import Log from "./log";
 
 
@@ -54,20 +55,24 @@ export default abstract class Contract {
     return value;
   }
 
-  static ContractResult (path: string) {
-    const cachedValue = _get(Contract._cache, `${path}.${RESULT}`);
+  private static _contractResult (className: string, functionName: string) {
+    const cachedValue = _get(Contract._cache, `${className}.${functionName}.${RESULT}`);
     if (!cachedValue) {
       Log.log('Cached value has not been found, replace undefined');
     }
 
     console.log('cached result', cachedValue)
     return cachedValue;
+  } 
+
+  static ContractResult () {
+    return {};
   }
 
   static populateCache (className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
     _set(Contract._cache, `${className}.${String(functionName)}`, {});
     for (let i = 0; i < paramsName.length; i++) {
-      _set(Contract._cache[className][functionName], paramsName[i], values[i]);
+      _set(Contract._cache[className][functionName], paramsName[i], _clone(values[i]));
     }
   }
 
@@ -97,13 +102,15 @@ export default abstract class Contract {
       const populateResultCache = (result) => this.populateFunctionResultCache(result, target.constructor.name, key);
       const destroyCache = () => this.destroyClassCache(target.constructor.name, key);
       const test = (s: any, className: string, callee: string | Symbol) => {
-        s.className = target.constructor.name;
-        s.funcName = callee;
-        this.OldValue = this._oldValue.bind(this, className, key, this.getOldValueParameter(condition.toString()))
+        this.OldValue = this._oldValue.bind(this, className, key, this.getOldValueParameter(condition.toString()));
+      }
+      const testResult = () => {
+        this.ContractResult = this._contractResult.bind(this, target.constructor.name, key)
       }
       const call = () => console.log(Contract._cache);
       const descriptorCall = function (...args: any[]) {
         test(this, target.constructor.name, key);
+        testResult();
         
         if (hasOldValueParameter) {
           populateCache(...args, this);

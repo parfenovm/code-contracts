@@ -7,14 +7,13 @@ class Func {
     this.test = "hi!"
   }
 
-  @Contract.Ensures((result: string | null, instance: Func) =>
-    result !== null
-    && Contract.OldValue<string>(instance.test) !== Contract.ContractResult('Func.test_ensures'),
+  @Contract.Ensures((instance: Func) => 
+    Contract.OldValue<string>(instance.test) !== Contract.ContractResult(),
     'Result should not be null'
   )
-  test_ensures (test: string, q?: string): string | null {
+  test_ensures (): string | null {
     this.test = 'yo';
-    return "hello";
+    return this.test;
   }
 
   @Contract.Assume((test: string | null) => test !== null, 'Test cant be null')
@@ -25,4 +24,4 @@ class Func {
 }
 
 const f = new Func();
-const result = f.test_ensures("no")
+const result = f.test_ensures()

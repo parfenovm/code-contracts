@@ -14,9 +14,9 @@ export default abstract class Contract {
   private _preCondition = 'Requires';
   private static _cache = {};
 
-  constructor () {}
+  constructor() { }
 
-  static getParameters (func: Function) {
+  static getParameters(func: Function) {
     return new RegExp('(?:' + func.name + '\\s*|^)\\s*\\((.*?)\\)')
       .exec(func.toString().replace(/\n/g, ''))[1]
       .replace(/\/\*.*?\*\//g, '')
@@ -24,15 +24,15 @@ export default abstract class Contract {
       .split(',');
   }
 
-  static hasOldValueParameter (func: string): boolean {
+  static hasOldValueParameter(func: string): boolean {
     return func.indexOf('OldValue') > -1;
   }
 
-  static hasResultParameter (func: string): boolean {
+  static hasResultParameter(func: string): boolean {
     return func.indexOf('ContractResult') > -1;
   }
 
-  private static _oldValue<T> (className: string, functionName: string, path: string): T | null {
+  private static _oldValue<T>(className: string, functionName: string, path: string): T | null {
     console.log(Contract._cache[className]);
     const cachedValue = _get(Contract._cache, `${className}.${functionName}.${path}`);
     if (!cachedValue) {
@@ -43,16 +43,16 @@ export default abstract class Contract {
     return cachedValue;
   }
 
-  static getOldValueParameter (func: string): string | null {
+  static getOldValueParameter(func: string): string | null {
     const result = new RegExp(/OldValue\(([^)]+)\)/).exec(func);
     return result && result[1];
   }
 
-  static OldValue<T> (value: T): T {
+  static OldValue<T>(value: T): T {
     return value;
   }
 
-  private static _contractResult (className: string, functionName: string) {
+  private static _contractResult(className: string, functionName: string) {
     const cachedValue = _get(Contract._cache, `${className}.${functionName}.${RESULT}`);
     if (!cachedValue) {
       Log.log('Cached value has not been found, replace undefined');
@@ -62,18 +62,18 @@ export default abstract class Contract {
     return cachedValue;
   }
 
-  static ContractResult () {
+  static ContractResult() {
     return {};
   }
 
-  static populateCache (className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
+  static populateCache(className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
     _set(Contract._cache, `${className}.${String(functionName)}`, {});
     for (let i = 0; i < paramsName.length; i++) {
       _set(Contract._cache[className][functionName], paramsName[i], _clone(values[i]));
     }
   }
 
-  static populateFunctionResultCache (result: any, className: string, functionName: string | symbol): void {
+  static populateFunctionResultCache(result: any, className: string, functionName: string | symbol): void {
     if (!Contract._cache[className]) {
       _set(Contract._cache, `${className}.${String(functionName)}`, {});
     }
@@ -81,7 +81,7 @@ export default abstract class Contract {
     Contract._cache[className][String(functionName)][RESULT] = result;
   }
 
-  static destroyClassCache (className: string, functionName: string | Symbol) {
+  static destroyClassCache(className: string, functionName: string | Symbol) {
     delete Contract._cache[className][functionName];
   }
 
@@ -90,24 +90,14 @@ export default abstract class Contract {
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.
    */
-  static Ensures (condition: (...conditionArgs: any[]) => boolean, message?: string) {
+  static Ensures(condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 
-      const hasOldValueParameter = this.hasOldValueParameter(condition.toString());
-      const populateCache = (...args) => this.populateCache(target.constructor.name, key, this.getParameters(condition), args);
-      const populateResultCache = (result) => this.populateFunctionResultCache(result, target.constructor.name, key);
-      const destroyCache = () => this.destroyClassCache(target.constructor.name, key);
-      const test = (s: any, className: string, callee: string | Symbol) => {
-        this.OldValue = this._oldValue.bind(this, className, key, this.getOldValueParameter(condition.toString()));
-      };
-      const testResult = () => {
-        this.ContractResult = this._contractResult.bind(this, target.constructor.name, key);
-      };
-      const call = () => console.log(Contract._cache);
+      const { bindOldValue, bindFunctionResult, hasOldValueParameter, populateCache, populateResultCache, destroyCache } = Contract.initContextParameters(condition, target, key);
       const descriptorCall = function (...args: any[]) {
-        test(this, target.constructor.name, key);
-        testResult();
+        bindOldValue(this, target.constructor.name, key);
+        bindFunctionResult();
 
         if (hasOldValueParameter) {
           populateCache(...args, this);
@@ -124,7 +114,7 @@ export default abstract class Contract {
     };
   }
 
-  static Assume (condition: ContractCondition, message?: string) {
+  static Assume(condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
       const descriptorCall = function (...args: any[]) {
@@ -136,6 +126,28 @@ export default abstract class Contract {
       descriptor.value = descriptorCall;
 
       return descriptor;
+    };
+  }
+
+  private static initContextParameters(condition: ContractCondition, target: Object, key: string | symbol) {
+    const hasOldValueParameter = Contract.hasOldValueParameter(condition.toString());
+    const populateCache = (...args: any[]) => Contract.populateCache(target.constructor.name, key, Contract.getParameters(condition), args);
+    const populateResultCache = (result: any) => Contract.populateFunctionResultCache(result, target.constructor.name, key);
+    const destroyCache = () => Contract.destroyClassCache(target.constructor.name, key);
+    const bindOldValue = (s: any, className: string, callee: string | Symbol) => {
+      Contract.OldValue = Contract._oldValue.bind(this, className, key, Contract.getOldValueParameter(condition.toString()));
+    };
+    const bindFunctionResult = () => {
+      Contract.ContractResult = Contract._contractResult.bind(this, target.constructor.name, key);
+    };
+
+    return {
+      hasOldValueParameter,
+      populateCache,
+      populateResultCache,
+      destroyCache,
+      bindOldValue,
+      bindFunctionResult
     };
   }
 }

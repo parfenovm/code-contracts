@@ -1,26 +1,23 @@
-import "reflect-metadata";
-import ContractInternal from "./contract-internal";
+import 'reflect-metadata';
+import ContractInternal from './contract-internal';
 import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
-import Log from "./log";
-
+import Log from './log';
 
 declare type ContractCondition = (...args: any[]) => boolean;
-declare type ContractFunction = (check: boolean, message?: string) => boolean;
 
 const RESULT = '__RESULT';
 
 export default abstract class Contract {
   private _postCondition = 'Ensures';
-  private _preCondition = 'Requires'
+  private _preCondition = 'Requires';
   private static _cache = {};
 
-  constructor () {
-  }
+  constructor () {}
 
   static getParameters (func: Function) {
-    return new RegExp('(?:'+func.name+'\\s*|^)\\s*\\((.*?)\\)')
+    return new RegExp('(?:' + func.name + '\\s*|^)\\s*\\((.*?)\\)')
       .exec(func.toString().replace(/\n/g, ''))[1]
       .replace(/\/\*.*?\*\//g, '')
       .replace(/ /g, '')
@@ -34,15 +31,15 @@ export default abstract class Contract {
   static hasResultParameter (func: string): boolean {
     return func.indexOf('ContractResult') > -1;
   }
-  
+
   private static _oldValue<T> (className: string, functionName: string, path: string): T | null {
-    console.log(Contract._cache[className])
+    console.log(Contract._cache[className]);
     const cachedValue = _get(Contract._cache, `${className}.${functionName}.${path}`);
     if (!cachedValue) {
       Log.log('Cached value has not been found, replace with passed value');
     }
 
-    console.log('cachedValue', cachedValue)
+    console.log('cachedValue', cachedValue);
     return cachedValue;
   }
 
@@ -61,9 +58,9 @@ export default abstract class Contract {
       Log.log('Cached value has not been found, replace undefined');
     }
 
-    console.log('cached result', cachedValue)
+    console.log('cached result', cachedValue);
     return cachedValue;
-  } 
+  }
 
   static ContractResult () {
     return {};
@@ -93,7 +90,7 @@ export default abstract class Contract {
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.
    */
-  static Ensures(condition: (...conditionArgs: any[]) => boolean, message?: string) {
+  static Ensures (condition: (...conditionArgs: any[]) => boolean, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 
@@ -103,42 +100,42 @@ export default abstract class Contract {
       const destroyCache = () => this.destroyClassCache(target.constructor.name, key);
       const test = (s: any, className: string, callee: string | Symbol) => {
         this.OldValue = this._oldValue.bind(this, className, key, this.getOldValueParameter(condition.toString()));
-      }
+      };
       const testResult = () => {
-        this.ContractResult = this._contractResult.bind(this, target.constructor.name, key)
-      }
+        this.ContractResult = this._contractResult.bind(this, target.constructor.name, key);
+      };
       const call = () => console.log(Contract._cache);
       const descriptorCall = function (...args: any[]) {
         test(this, target.constructor.name, key);
         testResult();
-        
+
         if (hasOldValueParameter) {
           populateCache(...args, this);
         }
 
         const result = original.apply(this, args);
         populateResultCache(result);
-        ContractInternal._ensures(condition.apply(null, [result, this]), message);
+        ContractInternal._ensures(condition.apply(null, [...args, this]), message);
         destroyCache();
-      }
+      };
       descriptor.value = descriptorCall;
 
       return descriptor;
-    }
+    };
   }
 
-  static Assume(condition: ContractCondition, message?: string) {
+  static Assume (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
       const descriptorCall = function (...args: any[]) {
         ContractInternal._assume(condition.apply(null, args), message);
         const result = original.apply(this, args);
         return result;
-      }
+      };
 
       descriptor.value = descriptorCall;
 
       return descriptor;
-    }
+    };
   }
 }

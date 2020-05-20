@@ -52,6 +52,10 @@ export default abstract class Contract {
     return value;
   }
 
+  static OldValueByPath<T>(path: string): T {
+    return {} as T;
+  }
+
   private static _contractResult(className: string, functionName: string) {
     const cachedValue = _get(Contract._cache, `${className}.${functionName}.${RESULT}`);
     if (!cachedValue) {
@@ -94,9 +98,10 @@ export default abstract class Contract {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 
-      const { bindOldValue, bindFunctionResult, hasOldValueParameter, populateCache, populateResultCache, destroyCache } = Contract.initContextParameters(condition, target, key);
+      const { bindOldValue, bindOldValueByPath, bindFunctionResult, hasOldValueParameter, populateCache, populateResultCache, destroyCache } = Contract.initContextParameters(condition, target, key);
       const descriptorCall = function (...args: any[]) {
-        bindOldValue(this, target.constructor.name, key);
+        bindOldValue();
+        bindOldValueByPath(this);
         bindFunctionResult();
 
         if (hasOldValueParameter) {
@@ -134,8 +139,13 @@ export default abstract class Contract {
     const populateCache = (...args: any[]) => Contract.populateCache(target.constructor.name, key, Contract.getParameters(condition), args);
     const populateResultCache = (result: any) => Contract.populateFunctionResultCache(result, target.constructor.name, key);
     const destroyCache = () => Contract.destroyClassCache(target.constructor.name, key);
-    const bindOldValue = (s: any, className: string, callee: string | Symbol) => {
-      Contract.OldValue = Contract._oldValue.bind(this, className, key, Contract.getOldValueParameter(condition.toString()));
+    const bindOldValue = () => {
+      Contract.OldValue = Contract._oldValue.bind(this, target.constructor.name, key, Contract.getOldValueParameter(condition.toString()));
+    };
+    const bindOldValueByPath = (context: any) => {
+      Contract.OldValueByPath = (path: string) => {
+        return Contract._oldValue.apply(context, [target.constructor.name, key, path]);
+      };
     };
     const bindFunctionResult = () => {
       Contract.ContractResult = Contract._contractResult.bind(this, target.constructor.name, key);
@@ -147,6 +157,7 @@ export default abstract class Contract {
       populateResultCache,
       destroyCache,
       bindOldValue,
+      bindOldValueByPath,
       bindFunctionResult
     };
   }

@@ -51,6 +51,17 @@ export default class ContractInternal {
     return condition;
   }
 
+  public static _assert (condition: boolean, message?: string) {
+    console.log(condition);
+    if (!condition) {
+      if (message) {
+        Log.log(message);
+      }
+    }
+
+    return condition;
+  }
+
   private static getParameters (func: Function) {
     return new RegExp('(?:' + func.name + '\\s*|^)\\s*\\((.*?)\\)')
       .exec(func.toString().replace(/\n/g, ''))[1]

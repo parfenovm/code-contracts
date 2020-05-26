@@ -20,6 +20,17 @@ export default abstract class Contract {
   }
 
   /**
+   * Not a Decorator. Specifies a condition to test. Executes at the place of call.
+   * @param condition - The conditional expression to test
+   * @param message - The message to post if the assumption fails.
+   */
+  public static Assert (condition: ContractCondition, message?: string) {
+    return function (...args: any[]) {
+      ContractInternal._assert(condition.apply(this, args), message);
+    };
+  }
+
+  /**
    * Specifies a postcondition contract for the enclosing method or property.
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.

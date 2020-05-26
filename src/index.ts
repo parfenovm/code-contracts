@@ -13,6 +13,7 @@ class Func {
   )
   test_ensures (): string | null {
     this.test = 'yo';
+    Contract.Assert((test: string) => test === 'hi', 'not cool!')(this.test);
     return this.test;
   }
 }

@@ -4,6 +4,7 @@
     "experimentalDecorators": true,
     "target": "ES5",
     "lib": ["ES2015", "DOM"],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "outDir": "build"
   }
 }

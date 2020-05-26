@@ -14,6 +14,10 @@ class Func {
   test_ensures (): string | null {
     this.test = 'yo';
     Contract.Assert((test: string) => test === 'hi', 'not cool!')(this.test);
+
+    const collection = [this.test];
+    console.log(collection);
+    Contract.Exists(collection, (item: string) => item === 'hi', 'fcuk');
     return this.test;
   }
 }

@@ -3,7 +3,7 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Contract from './contract';
-import { ContractCondition } from './types';
+import { ContractCondition, ContractExistsPredicate } from './types';
 
 const RESULT = '__RESULT';
 
@@ -60,6 +60,18 @@ export default class ContractInternal {
     }
 
     return condition;
+  }
+
+  public static _exists<T> (collection: T[], predicate: ContractExistsPredicate<T>, message?: string) {
+    const result = !!collection.find(predicate);
+    console.log('sup', result);
+    if (!result) {
+      if (message) {
+        Log.log(message);
+      }
+    }
+
+    return result;
   }
 
   private static getParameters (func: Function) {

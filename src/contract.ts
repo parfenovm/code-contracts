@@ -4,7 +4,7 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Log from './log';
-import { ContractCondition } from './types';
+import { ContractCondition, ContractExistsPredicate } from './types';
 
 export default abstract class Contract {
   public static OldValue<T> (value: T): T {
@@ -28,6 +28,10 @@ export default abstract class Contract {
     return function (...args: any[]) {
       ContractInternal._assert(condition.apply(this, args), message);
     };
+  }
+
+  public static Exists<T> (collection: T[], predicate: ContractExistsPredicate<T>, message?: string): void {
+    ContractInternal._exists(collection, predicate, message);
   }
 
   /**

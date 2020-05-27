@@ -3,13 +3,11 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Contract from './contract';
-import { ContractCondition, ContractExistsPredicate } from './types';
+import { ContractCondition, ContractPredicate } from './types';
 
 const RESULT = '__RESULT';
 
 export default class ContractInternal {
-  private _postCondition = 'Ensures';
-  private _preCondition = 'Requires';
   private static _cache = {};
 
   public static initContextParameters (contractInstance: Contract, condition: ContractCondition, target: Object, key: string | symbol) {
@@ -40,8 +38,7 @@ export default class ContractInternal {
     };
   }
 
-  public static _ensures (condition: boolean, message?: string) {
-    console.log(condition);
+  public static _ensures (condition: boolean, message?: string): boolean {
     if (!condition) {
       if (message) {
         Log.log(message);
@@ -51,8 +48,7 @@ export default class ContractInternal {
     return condition;
   }
 
-  public static _assert (condition: boolean, message?: string) {
-    console.log(condition);
+  public static _assert (condition: boolean, message?: string): boolean {
     if (!condition) {
       if (message) {
         Log.log(message);
@@ -62,9 +58,8 @@ export default class ContractInternal {
     return condition;
   }
 
-  public static _exists<T> (collection: T[], predicate: ContractExistsPredicate<T>, message?: string) {
+  public static _exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = !!collection.find(predicate);
-    console.log('sup', result);
     if (!result) {
       if (message) {
         Log.log(message);
@@ -72,6 +67,27 @@ export default class ContractInternal {
     }
 
     return result;
+  }
+
+  public static _forAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
+    const result = collection.every(predicate);
+    if (!result) {
+      if (message) {
+        Log.log(message);
+      }
+    }
+
+    return result;
+  }
+
+  public static _requires (condition: boolean, message?: string): boolean {
+    if (!condition) {
+      if (message) {
+        Log.log(message);
+      }
+    }
+
+    return condition;
   }
 
   private static getParameters (func: Function) {

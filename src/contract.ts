@@ -4,7 +4,7 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Log from './log';
-import { ContractCondition, ContractExistsPredicate } from './types';
+import { ContractCondition, ContractPredicate } from './types';
 
 export default abstract class Contract {
   public static OldValue<T> (value: T): T {
@@ -30,8 +30,27 @@ export default abstract class Contract {
     };
   }
 
-  public static Exists<T> (collection: T[], predicate: ContractExistsPredicate<T>, message?: string): void {
+  public static Exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
     ContractInternal._exists(collection, predicate, message);
+  }
+
+  public static ForAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
+    ContractInternal._forAll(collection, predicate, message);
+  }
+
+  public static Requires (condition: ContractCondition, message?: string) {
+    return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
+      const original = descriptor.value;
+
+      const descriptorCall = function (...args: any[]) {
+        ContractInternal._requires(condition.apply(null, [...args, this]), message);
+        return original.apply(this, args);
+      };
+
+      descriptor.value = descriptorCall;
+
+      return descriptor;
+    };
   }
 
   /**
@@ -57,6 +76,8 @@ export default abstract class Contract {
         populateResultCache(result);
         ContractInternal._ensures(condition.apply(null, [...args, this]), message);
         destroyCache();
+
+        return result;
       };
       descriptor.value = descriptorCall;
 

@@ -3,12 +3,18 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Contract from './contract';
-import { ContractCondition, ContractPredicate } from './types';
+import { ContractCondition, ContractPredicate, ContractSettings } from './types';
+import ContractFailedError from './contract-error';
 
 const RESULT = '__RESULT';
 
 export default class ContractInternal {
   private static _cache = {};
+  private static _settings: ContractSettings;
+
+  public static _setSettings (settings: ContractSettings) {
+    this._settings = settings;
+  }
 
   public static initContextParameters (contractInstance: Contract, condition: ContractCondition, target: Object, key: string | symbol) {
     const hasOldValueParameter = ContractInternal.hasOldValueParameter(condition.toString());
@@ -40,9 +46,7 @@ export default class ContractInternal {
 
   public static _ensures (condition: boolean, message?: string): boolean {
     if (!condition) {
-      if (message) {
-        Log.log(message);
-      }
+      this.executeError(message);
     }
 
     return condition;
@@ -88,6 +92,16 @@ export default class ContractInternal {
     }
 
     return condition;
+  }
+
+  private static executeError (message: string) {
+    const { shouldFailOnCondition } = this._settings;
+
+    if (shouldFailOnCondition) {
+      throw new ContractFailedError(message);
+    } else {
+      Log.log(message);
+    }
   }
 
   private static getParameters (func: Function) {

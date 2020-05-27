@@ -4,9 +4,13 @@ import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
 import Log from './log';
-import { ContractCondition, ContractPredicate } from './types';
+import { ContractCondition, ContractPredicate, ContractSettings } from './types';
 
 export default abstract class Contract {
+  public static setSettings (settings: ContractSettings) {
+    ContractInternal._setSettings(settings);
+  }
+
   public static OldValue<T> (value: T): T {
     return value;
   }
@@ -74,7 +78,9 @@ export default abstract class Contract {
 
         const result = original.apply(this, args);
         populateResultCache(result);
-        ContractInternal._ensures(condition.apply(null, [...args, this]), message);
+
+        const trace = `Class: ${target.constructor.name}, Function: ${key.toString()}. ${message}`;
+        ContractInternal._ensures(condition.apply(null, [...args, this]), trace);
         destroyCache();
 
         return result;

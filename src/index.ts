@@ -1,5 +1,7 @@
 import Contract from './contract';
 
+Contract.setSettings({ shouldFailOnCondition: true });
+
 class Func {
   public test: string = 'hi';
 
@@ -8,7 +10,7 @@ class Func {
   }
 
   @Contract.Ensures(
-    (instance: Func) => Contract.OldValueByPath<string>('instance.test') !== Contract.ContractResult(),
+    (instance: Func) => Contract.OldValueByPath<string>('instance.test') === Contract.ContractResult(),
     'Result should not be null'
   )
   test_ensures (): string | null {

@@ -12,6 +12,10 @@ export default class ContractInternal {
   private static _cache = {};
   private static _settings: ContractSettings;
 
+  public get shouldSkipContractChecks () {
+    return ContractInternal._settings.shouldSkipContractChecks;
+  }
+
   public static _setSettings (settings: ContractSettings) {
     this._settings = settings;
   }
@@ -54,9 +58,7 @@ export default class ContractInternal {
 
   public static _assert (condition: boolean, message?: string): boolean {
     if (!condition) {
-      if (message) {
-        Log.log(message);
-      }
+      this.executeError(message);
     }
 
     return condition;
@@ -65,9 +67,7 @@ export default class ContractInternal {
   public static _exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = !!collection.find(predicate);
     if (!result) {
-      if (message) {
-        Log.log(message);
-      }
+      this.executeError(message);
     }
 
     return result;
@@ -76,9 +76,7 @@ export default class ContractInternal {
   public static _forAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = collection.every(predicate);
     if (!result) {
-      if (message) {
-        Log.log(message);
-      }
+      this.executeError(message);
     }
 
     return result;
@@ -86,9 +84,7 @@ export default class ContractInternal {
 
   public static _requires (condition: boolean, message?: string): boolean {
     if (!condition) {
-      if (message) {
-        Log.log(message);
-      }
+      this.executeError(message);
     }
 
     return condition;

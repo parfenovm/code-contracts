@@ -3,7 +3,6 @@ import ContractInternal from './contract-internal';
 import _set from 'lodash.set';
 import _get from 'lodash.get';
 import _clone from 'lodash.clone';
-import Log from './log';
 import { ContractCondition, ContractPredicate, ContractSettings } from './types';
 
 export default abstract class Contract {

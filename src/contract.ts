@@ -27,31 +27,31 @@ export default abstract class Contract {
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.
    */
-  public static Assert (condition: ContractCondition, message?: string) {
-    if (ContractInternal.shouldSkipContractChecks) return;
+  public static Assert<T extends Error> (condition: ContractCondition, message?: string) {
     return function (...args: any[]) {
-      ContractInternal._assert(condition.apply(this, args), message);
+      if (ContractInternal.shouldSkipContractChecks) return;
+      ContractInternal._assert<T>(condition.apply(this, args), message);
     };
   }
 
-  public static Exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
+  public static Exists<T, E extends Error> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
     if (ContractInternal.shouldSkipContractChecks) return;
-    ContractInternal._exists(collection, predicate, message);
+    ContractInternal._exists<T, E>(collection, predicate, message);
   }
 
-  public static ForAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
+  public static ForAll<T, E extends Error> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
     if (ContractInternal.shouldSkipContractChecks) return;
-    ContractInternal._forAll(collection, predicate, message);
+    ContractInternal._forAll<T, E>(collection, predicate, message);
   }
 
-  public static Requires (condition: ContractCondition, message?: string) {
+  public static Requires<T extends Error> (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 
       if (ContractInternal.shouldSkipContractChecks) return descriptor;
 
       const descriptorCall = function (...args: any[]) {
-        ContractInternal._requires(condition.apply(null, [...args, this]), message);
+        ContractInternal._requires<T>(condition.apply(null, [...args, this]), message);
         return original.apply(this, args);
       };
 
@@ -66,7 +66,7 @@ export default abstract class Contract {
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.
    */
-  public static Ensures (condition: ContractCondition, message?: string) {
+  public static Ensures<T extends Error> (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 
@@ -86,7 +86,7 @@ export default abstract class Contract {
         populateResultCache(result);
 
         const trace = `Class: ${target.constructor.name}, Function: ${key.toString()}. ${message}`;
-        ContractInternal._ensures(condition.apply(null, [...args, this]), trace);
+        ContractInternal._ensures<T>(condition.apply(null, [...args, this]), trace);
         destroyCache();
 
         return result;

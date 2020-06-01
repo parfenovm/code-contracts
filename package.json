@@ -9,6 +9,9 @@
   "author": "Mark Parfenov",
   "license": "MIT",
   "devDependencies": {
+    "@types/lodash.clone": "^4.5.6",
+    "@types/lodash.get": "^4.4.6",
+    "@types/lodash.set": "^4.3.6",
     "@types/node": "^13.13.5",
     "nodemon": "^2.0.3",
     "semistandard": "^14.2.0",

@@ -28,22 +28,27 @@ export default abstract class Contract {
    * @param message - The message to post if the assumption fails.
    */
   public static Assert (condition: ContractCondition, message?: string) {
+    if (ContractInternal.shouldSkipContractChecks) return;
     return function (...args: any[]) {
       ContractInternal._assert(condition.apply(this, args), message);
     };
   }
 
   public static Exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
+    if (ContractInternal.shouldSkipContractChecks) return;
     ContractInternal._exists(collection, predicate, message);
   }
 
   public static ForAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
+    if (ContractInternal.shouldSkipContractChecks) return;
     ContractInternal._forAll(collection, predicate, message);
   }
 
   public static Requires (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
+
+      if (ContractInternal.shouldSkipContractChecks) return descriptor;
 
       const descriptorCall = function (...args: any[]) {
         ContractInternal._requires(condition.apply(null, [...args, this]), message);
@@ -64,6 +69,8 @@ export default abstract class Contract {
   public static Ensures (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
+
+      if (ContractInternal.shouldSkipContractChecks) return descriptor;
 
       const { bindOldValue, bindOldValueByPath, bindFunctionResult, hasOldValueParameter, populateCache, populateResultCache, destroyCache } = ContractInternal.initContextParameters(Contract, condition, target, key);
       const descriptorCall = function (...args: any[]) {

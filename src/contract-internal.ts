@@ -12,7 +12,7 @@ export default class ContractInternal {
   private static _cache = {};
   private static _settings: ContractSettings;
 
-  public get shouldSkipContractChecks () {
+  public static get shouldSkipContractChecks () {
     return ContractInternal._settings.shouldSkipContractChecks;
   }
 

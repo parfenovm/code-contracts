@@ -48,54 +48,53 @@ export default class ContractInternal {
     };
   }
 
-  public static _ensures<T extends Error> (condition: boolean, message?: string): boolean {
+  public static _ensures<T> (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError<T>(message);
+      this.executeError(message);
     }
 
     return condition;
   }
 
-  public static _assert<T extends Error> (condition: boolean, message?: string): boolean {
+  public static _assert (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError<T>(message);
+      this.executeError(message);
     }
 
     return condition;
   }
 
-  public static _exists<T, E extends Error> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
+  public static _exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = !!collection.find(predicate);
     if (!result) {
-      this.executeError<E>(message);
+      this.executeError(message);
     }
 
     return result;
   }
 
-  public static _forAll<T, E extends Error> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
+  public static _forAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = collection.every(predicate);
     if (!result) {
-      this.executeError<E>(message);
+      this.executeError(message);
     }
 
     return result;
   }
 
-  public static _requires<T extends Error> (condition: boolean, message?: string): boolean {
+  public static _requires (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError<T>(message);
+      this.executeError(message);
     }
 
     return condition;
   }
 
-  private static executeError<T extends Error = ContractFailedError> (message?: string) {
+  private static executeError (message?: string) {
     const { shouldFailOnCondition } = this._settings;
 
     if (shouldFailOnCondition) {
-      const error = { message: message } as T;
-      throw error;
+      throw new ContractFailedError(message || '');
     } else {
       Log.log(message);
     }

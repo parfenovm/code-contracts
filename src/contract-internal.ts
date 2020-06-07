@@ -50,7 +50,7 @@ export default class ContractInternal {
 
   public static _ensures<T> (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError(message);
+      this._executeError(message);
     }
 
     return condition;
@@ -58,7 +58,7 @@ export default class ContractInternal {
 
   public static _assert (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError(message);
+      this._executeError(message);
     }
 
     return condition;
@@ -67,7 +67,7 @@ export default class ContractInternal {
   public static _exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = !!collection.find(predicate);
     if (!result) {
-      this.executeError(message);
+      this._executeError(message);
     }
 
     return result;
@@ -76,7 +76,7 @@ export default class ContractInternal {
   public static _forAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): boolean {
     const result = collection.every(predicate);
     if (!result) {
-      this.executeError(message);
+      this._executeError(message);
     }
 
     return result;
@@ -84,13 +84,13 @@ export default class ContractInternal {
 
   public static _requires (condition: boolean, message?: string): boolean {
     if (!condition) {
-      this.executeError(message);
+      this._executeError(message);
     }
 
     return condition;
   }
 
-  private static executeError (message?: string) {
+  public static _executeError (message?: string) {
     const { shouldFailOnCondition } = this._settings;
 
     if (shouldFailOnCondition) {

@@ -83,6 +83,7 @@ export default class ContractInternal {
   }
 
   public static _requires (condition: boolean, message?: string): boolean {
+    console.log(condition);
     if (!condition) {
       this._executeError(message);
     }
@@ -91,11 +92,11 @@ export default class ContractInternal {
   }
 
   public static _executeError (message?: string) {
-    const { shouldFailOnCondition } = this._settings;
+    const { shouldFailOnCondition, shouldLogError } = this._settings;
 
     if (shouldFailOnCondition) {
       throw new ContractFailedError(message || '');
-    } else {
+    } else if (shouldLogError) {
       Log.log(message);
     }
   }

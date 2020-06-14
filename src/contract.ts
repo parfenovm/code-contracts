@@ -6,6 +6,10 @@ import _clone from 'lodash.clone';
 import { ContractCondition, ContractPredicate, ContractSettings } from './types';
 
 export default abstract class Contract {
+  /**
+   * Set Contract settings
+   * @param settings - contract settings object
+   */
   public static setSettings (settings: ContractSettings) {
     ContractInternal._setSettings(settings);
   }

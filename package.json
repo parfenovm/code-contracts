@@ -1,10 +1,20 @@
 {
   "name": "code-contracts",
   "version": "1.0.0",
-  "description": "code contracts",
-  "main": "index.js",
+  "description": "C# inspired Code Contracts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "keywords": ["Code", "Contracts"],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config jest.config.js",
+    "build": "tsc --build tsconfig.json",
+    "prepare" : "npm run build",
+    "version" : "npm run format && git add -A src",
+    "postversion" : "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/axxx307/code-contracts.git"
   },
   "author": "Mark Parfenov",
   "license": "MIT",
@@ -28,5 +38,6 @@
     "lodash.get": "^4.4.2",
     "lodash.set": "^4.3.2",
     "reflect-metadata": "^0.1.13"
-  }
+  },
+  "files": ["dist/**/*"]
 }

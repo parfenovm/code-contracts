@@ -83,7 +83,6 @@ export default class ContractInternal {
   }
 
   public static _requires (condition: boolean, message?: string): boolean {
-    console.log(condition);
     if (!condition) {
       this._executeError(message);
     }

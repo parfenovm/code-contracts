@@ -1,4 +1,4 @@
-import Test from './test';
+import Test from './mock-class';
 import Contract from '../contract';
 import ContractInternal from '../contract-internal';
 
@@ -130,7 +130,54 @@ describe('Actions', () => {
 
     expect(() => test.testRequires(null)).toThrowError();
     expect(spyTestRequires.mock.calls.length).toBe(1);
-    console.log(spyTestRequires.mock.results);
+    expect(spyTestRequires.mock.results[0].type).toBe('throw');
+  });
+
+  test('Ensures - returns true', () => {
+    const testFunc = () => {
+      class Local extends Test {
+        @Contract.Ensures(item => item !== null, 'fail')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return Local;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe('item');
+  });
+
+  test('Ensures - returns false', () => {
+    const testFunc = () => {
+      class Local extends Test {
+        constructor () {
+          super({ shouldFailOnCondition: true, shouldSkipContractChecks: false, shouldLogError: false });
+        }
+
+        @Contract.Requires(item => item !== null, 'fail requires')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return Local;
+    };
+
+    const TestClass = testFunc();
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+
+    expect(() => test.testEnsures(null)).toThrowError();
+    expect(spyTestRequires.mock.calls.length).toBe(1);
     expect(spyTestRequires.mock.results[0].type).toBe('throw');
   });
 });

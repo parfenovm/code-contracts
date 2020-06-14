@@ -299,4 +299,102 @@ describe('Test Ensures', () => {
     expect(spyTestRequires.mock.calls.length).toBe(1);
     expect(spyTestRequires.mock.results[0].value).toBe(null);
   });
+
+  test('Ensures - access class this instance', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        private field: string = 'test';
+
+        @Contract.Ensures((item: any, EnsuresLocal: EnsuresLocal) => Contract.ContractResult() !== EnsuresLocal.field, 'fail')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe('item');
+  });
+
+  test('Ensures - access class cache this instance with empty field', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        private field: string = 'test';
+
+        @Contract.Ensures((EnsuresLocal: EnsuresLocal) => Contract.OldValue(EnsuresLocal.field) === 'test' && Contract.ContractResult() === EnsuresLocal.field, 'fail')
+        public testEnsures (): any {
+          return this.field;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures();
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+  });
+
+  test('Ensures - access class cache this instance with empty fields and modify field', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        private field: string = 'test';
+
+        @Contract.Ensures((EnsuresLocal: EnsuresLocal) => Contract.OldValue(EnsuresLocal.field) === 'test' && Contract.ContractResult() !== 'test', 'fail')
+        public testEnsures (): any {
+          this.field = 'new test';
+          return this.field;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures();
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+  });
+
+  test('Ensures - no return function', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        private field: string = 'test';
+
+        @Contract.Ensures((EnsuresLocal: EnsuresLocal) => Contract.OldValue(EnsuresLocal.field) === 'test', 'fail')
+        public testEnsures (): any {
+          this.field = 'new test';
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures();
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+  });
 });

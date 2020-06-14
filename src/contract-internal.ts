@@ -5,6 +5,7 @@ import _clone from 'lodash.clone';
 import Contract from './contract';
 import { ContractCondition, ContractPredicate, ContractSettings } from './types';
 import ContractFailedError from './contract-error';
+import crypto from 'crypto';
 
 const RESULT = '__RESULT';
 
@@ -21,20 +22,21 @@ export default class ContractInternal {
   }
 
   public static initContextParameters (contractInstance: Contract, condition: ContractCondition, target: Object, key: string | symbol) {
+    const randomId = crypto.randomBytes(20).toString('hex');
     const hasOldValueParameter = ContractInternal.hasOldValueParameter(condition.toString());
-    const populateCache = (...args: any[]) => ContractInternal.populateCache(target.constructor.name, key, ContractInternal.getParameters(condition), args);
-    const populateResultCache = (result: any) => ContractInternal.populateFunctionResultCache(result, target.constructor.name, key);
-    const destroyCache = () => ContractInternal.destroyClassCache(target.constructor.name, key);
+    const populateCache = (...args: any[]) => ContractInternal.populateCache(randomId, target.constructor.name, key, ContractInternal.getParameters(condition), args);
+    const populateResultCache = (result: any) => ContractInternal.populateFunctionResultCache(randomId, result, target.constructor.name, key);
+    const destroyCache = () => ContractInternal.destroyClassCache(randomId, target.constructor.name, key);
     const bindOldValue = () => {
-      Contract.OldValue = ContractInternal._oldValue.bind(this, target.constructor.name, key, ContractInternal.getOldValueParameter(condition.toString()));
+      Contract.OldValue = ContractInternal._oldValue.bind(this, randomId, target.constructor.name, key, ContractInternal.getOldValueParameter(condition.toString()));
     };
     const bindOldValueByPath = (context: any) => {
       Contract.OldValueByPath = (path: string) => {
-        return ContractInternal._oldValue.apply(context, [target.constructor.name, key, path]);
+        return ContractInternal._oldValue.apply(context, [randomId, target.constructor.name, key, path]);
       };
     };
     const bindFunctionResult = () => {
-      Contract.ContractResult = ContractInternal._contractResult.bind(this, target.constructor.name, key);
+      Contract.ContractResult = ContractInternal._contractResult.bind(this, randomId, target.constructor.name, key);
     };
 
     return {
@@ -121,9 +123,8 @@ export default class ContractInternal {
     return func.indexOf('ContractResult') > -1;
   }
 
-  private static _oldValue<T> (className: string, functionName: string, path: string): T | null {
-    console.log(ContractInternal._cache[className]);
-    const cachedValue = _get(ContractInternal._cache, `${className}.${functionName}.${path}`);
+  private static _oldValue<T> (randomId: string, className: string, functionName: string, path: string): T | null {
+    const cachedValue = _get(ContractInternal._cache, `${randomId}.${className}.${functionName}.${path}`);
     if (!cachedValue) {
       Log.log('Cached value has not been found, replace with passed value');
     }
@@ -137,32 +138,31 @@ export default class ContractInternal {
     return result && result[1];
   }
 
-  private static populateCache (className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
-    _set(ContractInternal._cache, `${className}.${String(functionName)}`, {});
+  private static populateCache (randomId: string, className: string, functionName: string | symbol, paramsName: string[], values: any[]): void {
+    _set(ContractInternal._cache, `${randomId}.${className}.${String(functionName)}`, {});
     for (let i = 0; i < paramsName.length; i++) {
-      _set(ContractInternal._cache[className][functionName], paramsName[i], _clone(values[i]));
+      _set(ContractInternal._cache[randomId][className][functionName], paramsName[i], _clone(values[i]));
     }
   }
 
-  private static populateFunctionResultCache (result: any, className: string, functionName: string | symbol): void {
-    if (!ContractInternal._cache[className]) {
-      _set(ContractInternal._cache, `${className}.${String(functionName)}`, {});
+  private static populateFunctionResultCache (randomId: string, result: any, className: string, functionName: string | symbol): void {
+    if (!_get(ContractInternal._cache, `${randomId}.${className}`)) {
+      _set(ContractInternal._cache, `${randomId}.${className}.${String(functionName)}`, {});
     }
 
-    ContractInternal._cache[className][String(functionName)][RESULT] = result;
+    ContractInternal._cache[randomId][className][String(functionName)][RESULT] = result;
   }
 
-  private static destroyClassCache (className: string, functionName: string | Symbol) {
-    delete ContractInternal._cache[className][functionName];
+  private static destroyClassCache (randomId: string, className: string, functionName: string | Symbol) {
+    delete ContractInternal._cache[randomId][className][functionName];
   }
 
-  private static _contractResult (className: string, functionName: string) {
-    const cachedValue = _get(ContractInternal._cache, `${className}.${functionName}.${RESULT}`);
+  private static _contractResult (randomId: string, className: string, functionName: string) {
+    const cachedValue = _get(ContractInternal._cache, `${randomId}.${className}.${functionName}.${RESULT}`);
     if (!cachedValue) {
       Log.log('Cached value has not been found, replace undefined');
     }
 
-    console.log('cached result', cachedValue);
     return cachedValue;
   }
 }

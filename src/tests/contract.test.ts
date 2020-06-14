@@ -181,3 +181,122 @@ describe('Actions', () => {
     expect(spyTestRequires.mock.results[0].type).toBe('throw');
   });
 });
+
+describe('Test Ensures', () => {
+  test('Ensures - access OldValue by variable name', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        @Contract.Ensures(item => Contract.OldValue(item) !== null, 'fail')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe('item');
+  });
+
+  test('Ensures - access OldValue by path', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        @Contract.Ensures(item => Contract.OldValueByPath('item') !== null, 'fail')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe('item');
+  });
+
+  test('Ensures - access OldValue - change value in function', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        @Contract.Ensures(item => Contract.OldValue(item) !== null, 'fail')
+        public testEnsures (item: any): any {
+          item = null;
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe(null);
+  });
+
+  test('Ensures - access Result', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        @Contract.Ensures(item => Contract.ContractResult() !== null, 'fail')
+        public testEnsures (item: any): any {
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe('item');
+  });
+
+  test('Ensures - access Result and OldValue', () => {
+    const testFunc = () => {
+      class EnsuresLocal extends Test {
+        @Contract.Ensures(item => Contract.ContractResult() !== Contract.OldValue(item), 'fail')
+        public testEnsures (item: any): any {
+          item = null;
+          return item;
+        }
+      }
+
+      return EnsuresLocal;
+    };
+
+    const TestClass = testFunc();
+    const spyReq = jest.spyOn(ContractInternal, '_ensures');
+    const spyTestRequires = jest.spyOn(TestClass.prototype, 'testEnsures');
+    const test = new TestClass();
+    test.testEnsures('item');
+
+    expect(spyReq.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.calls.length).toBe(1);
+    expect(spyTestRequires.mock.results[0].value).toBe(null);
+  });
+});

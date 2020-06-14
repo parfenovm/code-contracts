@@ -10,20 +10,31 @@ export default abstract class Contract {
     ContractInternal._setSettings(settings);
   }
 
+  /**
+   * Represents values as they were at the start of a method or property.
+   * @param value - value of type T
+   */
   public static OldValue<T> (value: T): T {
     return value;
   }
 
+  /**
+   * Represents values as they were at the start of a method or property.
+   * @param path - path to the value
+   */
   public static OldValueByPath<T> (path: string): T {
     return {} as T;
   }
 
+  /**
+   * Represents the return value of a method or property.
+   */
   public static ContractResult () {
     return {};
   }
 
   /**
-   * Not a Decorator. Specifies a condition to test. Executes at the place of call.
+   * Checks for a condition; if the condition is false, follows the escalation policy set for the analyzer.
    * @param condition - The conditional expression to test
    * @param message - The message to post if the assumption fails.
    */
@@ -34,17 +45,34 @@ export default abstract class Contract {
     };
   }
 
+  /**
+   * Determines whether an element within a collection of elements exists within a function.
+   * @param collection<T> - Collection of type T
+   * @param predicate<T> - Predicate condition with return type T
+   * @param message - The message to post if the assumption fails.
+   */
   public static Exists<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
     if (ContractInternal.shouldSkipContractChecks) return;
     ContractInternal._exists<T>(collection, predicate, message);
   }
 
+  /**
+   * Determines whether all the elements in a collection exist within a function.
+   * @param collection<T> - Collection of type T
+   * @param predicate<T> - Predicate condition with return type T
+   * @param message - The message to post if the assumption fails.
+   */
   public static ForAll<T> (collection: T[], predicate: ContractPredicate<T>, message?: string): void {
     if (ContractInternal.shouldSkipContractChecks) return;
     ContractInternal._forAll<T>(collection, predicate, message);
   }
 
-  public static Requires<T> (condition: ContractCondition, message?: string) {
+  /**
+   * Specifies a precondition contract for the enclosing method or property, and displays a message if the condition for the contract fails.
+   * @param condition - The conditional expression to test
+   * @param message - The message to post if the assumption fails.
+   */
+  public static Requires (condition: ContractCondition, message?: string) {
     return (target: Object, key: string | symbol, descriptor: PropertyDescriptor) => {
       const original = descriptor.value;
 

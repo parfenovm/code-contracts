@@ -10,7 +10,7 @@ import crypto from 'crypto';
 const RESULT = '__RESULT';
 
 export default class ContractInternal {
-  private static _cache = {};
+  public static _cache = {};
   private static _settings: ContractSettings;
 
   public static get shouldSkipContractChecks () {

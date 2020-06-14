@@ -397,4 +397,27 @@ describe('Test Ensures', () => {
     expect(spyReq.mock.calls.length).toBe(1);
     expect(spyTestRequires.mock.calls.length).toBe(1);
   });
+
+  test('Ensures - cache is cleaned after function call', () => {
+    const testFunc = () => {
+      class EnsuresLocalCacheTest extends Test {
+        private field: string = 'test';
+
+        @Contract.Ensures((EnsuresLocal: EnsuresLocalCacheTest) => Contract.OldValue(EnsuresLocal.field) === 'test', 'fail')
+        public testEnsures (): any {
+          this.field = 'new test';
+        }
+      }
+
+      return EnsuresLocalCacheTest;
+    };
+
+    const TestClass = testFunc();
+    const test = new TestClass();
+    test.testEnsures();
+
+    const item: any = Object.values(ContractInternal._cache).find((x: any) => x['EnsuresLocalCacheTest']);
+    expect(item).toBeDefined();
+    expect(Object.values(item.EnsuresLocalCacheTest).length).toBe(0);
+  });
 });

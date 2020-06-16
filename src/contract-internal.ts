@@ -11,14 +11,15 @@ const RESULT = '__RESULT';
 
 export default class ContractInternal {
   public static _cache = {};
-  private static _settings: ContractSettings;
+  private static defaultSettings: ContractSettings = { defaultLogger: Log, defaultContractError: ContractFailedError, shouldFailOnCondition: true, shouldLogError: true, shouldSkipContractChecks: false };
+  private static _settings: ContractSettings = ContractInternal.defaultSettings;
 
   public static get shouldSkipContractChecks () {
     return ContractInternal._settings.shouldSkipContractChecks;
   }
 
   public static _setSettings (settings: ContractSettings) {
-    this._settings = settings;
+    ContractInternal._settings = settings;
   }
 
   public static initContextParameters (contractInstance: Contract, condition: ContractCondition, target: Object, key: string | symbol) {

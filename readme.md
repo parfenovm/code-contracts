@@ -23,7 +23,7 @@ more details about this case.
 
 **Setup**
 
-Setup contracts with Contract.setSettings first.
+Setup contracts with Contract.setSettings first. You can use default settings without setup.
 Contracts export Log and ContractFailedError classes for you to extend and define in settings.
 
 ## Contract Usage Examples
@@ -31,7 +31,7 @@ Contracts export Log and ContractFailedError classes for you to extend and defin
 **Assert**
 ```
 testMethod(argument) {
-  Contract.Assert((argument) => argument !== null, 'fail message');
+  Contract.Assert((argument) => argument !== null, 'fail message')(argument);
 }
 ```
 

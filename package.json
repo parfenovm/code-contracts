@@ -1,5 +1,5 @@
 {
-  "name": "code-contracts",
+  "name": "js-contracts",
   "version": "1.0.0",
   "description": "C# inspired Code Contracts",
   "main": "dist/index.js",

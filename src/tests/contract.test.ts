@@ -1,6 +1,8 @@
 import Test from './mock-class';
 import Contract from '../contract';
 import ContractInternal from '../contract-internal';
+import Log from '../log';
+import ContractFailedError from '../contract-error';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -112,7 +114,7 @@ describe('Actions', () => {
     const testFunc = () => {
       class Local extends Test {
         constructor () {
-          super({ shouldFailOnCondition: true, shouldSkipContractChecks: false, shouldLogError: false });
+          super({ shouldFailOnCondition: true, shouldSkipContractChecks: false, shouldLogError: false, defaultLogger: Log, defaultContractError: ContractFailedError });
         }
 
         @Contract.Requires(item => item !== null, 'fail requires')
@@ -160,7 +162,7 @@ describe('Actions', () => {
     const testFunc = () => {
       class Local extends Test {
         constructor () {
-          super({ shouldFailOnCondition: true, shouldSkipContractChecks: false, shouldLogError: false });
+          super({ shouldFailOnCondition: true, shouldSkipContractChecks: false, shouldLogError: false, defaultContractError: ContractFailedError, defaultLogger: Log });
         }
 
         @Contract.Requires(item => item !== null, 'fail requires')

@@ -93,12 +93,12 @@ export default class ContractInternal {
   }
 
   public static _executeError (message?: string) {
-    const { shouldFailOnCondition, shouldLogError } = this._settings;
+    const { shouldFailOnCondition, shouldLogError, defaultLogger, defaultContractError } = this._settings;
 
     if (shouldFailOnCondition) {
-      throw new ContractFailedError(message || '');
+      throw new defaultContractError(message || '');
     } else if (shouldLogError) {
-      Log.log(message);
+      defaultLogger.log(message);
     }
   }
 

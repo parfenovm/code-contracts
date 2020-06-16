@@ -1,6 +1,6 @@
 {
   "name": "js-contracts",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "C# inspired Code Contracts",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

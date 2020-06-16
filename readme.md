@@ -10,6 +10,10 @@ npm install js-contracts --save
 
 ## Usage
 
+**PLEASE NOTE**
+
+This package relies on use of decorators. For this package to work, you need to enable **experimentalDecorators** option in your tsconfig.json
+
 This packages relies on decorators to implement post and pre conditions. Although some functions
 do not require decorators usage, so you can use some functionality of this package in functional code as well.
 
